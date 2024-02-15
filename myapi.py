@@ -1,4 +1,4 @@
-from fastapi import  FastAPI, Path
+from fastapi import  FastAPI, HTTPException, Path,Response,status
 from typing import Optional
 
 from fastapi.params import Body
@@ -58,10 +58,40 @@ def get_latest_post():
     
 @app.get("/posts/{id}")
 def get_post(id:int):
-    print("hi")
     post = find_post(id)
-    print("hi")
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} was not found")
     return {
         "post_details":post
     }
     
+    
+def find_index_post(id):
+    for i, p in enumerate(my_post):
+        if p['id']==id:
+            return i    
+    
+@app.delete("/posts/{id}")
+def delete_post(id:int):
+    index = find_index_post(id)
+    my_post.pop(index)
+    return{
+        "message":"Successfully deleted"
+    }
+    
+    
+@app.put("/posts/{id}")
+def update_post(id:int, post: Post):
+    print(post)
+    index = find_index_post(id)
+    if index == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} does not exist")
+    post_dict = post.dict()
+    my_post[index] = post_dict
+    post_dict['id'] = id
+    
+    return {
+        "message":"Successfully updated"
+    }
